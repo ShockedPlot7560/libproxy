@@ -14,6 +14,8 @@ use function method_exists;
 
 class PMUtils
 {
+    private static RakLibInterface $rakLibInterface;
+
     public static function getPacketSerializerContext(Server $server): PacketSerializerContext
     {
         if (method_exists($server, 'getPacketSerializerContext')) {
@@ -65,17 +67,28 @@ class PMUtils
         return $property->getValue($interface);
     }
 
+    public static function setRakLibInterface(RakLibInterface $rakLibInterface): void
+    {
+        self::$rakLibInterface = $rakLibInterface;
+    }
+
     /**
      * @throws Exception
      */
     private static function getRaklibInterface(Server $server): RakLibInterface
     {
-        foreach ($server->getNetwork()->getInterfaces() as $interface) {
+        if (isset(self::$rakLibInterface)) {
+            return self::$rakLibInterface;
+        }
+
+        $interfaces = $server->getNetwork()->getInterfaces();
+        foreach ($interfaces as $interface) {
             if ($interface instanceof RakLibInterface) {
+                self::$rakLibInterface = $interface;
                 return $interface;
             }
         }
 
-        throw new Exception("Raklib interface hasn't been registered");
+        throw new Exception("RakLibInterface not found");
     }
 }
